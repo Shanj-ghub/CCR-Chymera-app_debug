@@ -1,0 +1,175 @@
+/* css/chymera-search.css
+   Two-column layout for search page and responsive stacking
+*/
+
+@font-face {
+  font-family: 'MontserratCustom';
+  src: url('/themes/custom/ccr/assets/fonts/custom/montserrat/Montserrat-Regular.woff2') format('woff2'),
+       url('/themes/custom/ccr/assets/fonts/custom/montserrat/Montserrat-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MontserratCustom';
+  src: url('/themes/custom/ccr/assets/fonts/custom/montserrat/Montserrat-Bold.woff2') format('woff2'),
+       url('/themes/custom/ccr/assets/fonts/custom/montserrat/Montserrat-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MontserratCustom';
+  src: url('/themes/custom/ccr/assets/fonts/custom/montserrat/Montserrat-Italic.woff2') format('woff2'),
+       url('/themes/custom/ccr/assets/fonts/custom/montserrat/Montserrat-Italic.woff') format('woff');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root{
+  --sidebar-width: 320px; /* left form column width */
+  --gap: 32px;
+  --page-max: 1200px;
+  --brand-blue: #185c78; /* adjust as needed */
+  --muted-bg: #f4f4f4;
+  --panel-border: #e6e6e6;
+  --text: #222;
+  font-family: 'MontserratCustom', Arial, sans-serif;
+}
+
+/* Container */
+.chymera-container {
+  width: 100%;
+  background: #fff;
+}
+.chymera-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  gap: var(--gap);
+  align-items: start;
+  /* padding: 28px 20px; */
+  box-sizing: border-box;
+}
+
+/* Left column (form) */
+.search-form-column {
+  background: #fff;
+  border-right: 1px solid var(--panel-border);
+  padding-right: 18px;
+  box-sizing: border-box;
+}
+
+.chymera-search-form {
+  width: 100%;
+}
+
+/* Form groups */
+.form-group {
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: var(--text);
+}
+.form-group label { display:block; margin-bottom:6px; font-weight:600; font-size:13px;}
+.form-group input:not([type]),
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--panel-border);
+  border-radius:3px;
+  background:#fff;
+  font-size:14px;
+  box-sizing:border-box;
+}
+.form-group input[type="radio"],
+.form-group input[type="checkbox"]{ margin-right:8px; vertical-align:middle; }
+
+/* vertical radio group styling (stacked) */
+.vertical-radio label { display:block; margin-bottom:8px; font-weight:400; }
+.vertical-radio label input{ margin-right:10px; }
+
+/* upload box */
+.upload-box {
+  border:2px dashed #ddd;
+  padding: 14px;
+  border-radius:4px;
+  background: #fafafa;
+  color:#666;
+}
+
+/* panel subsections */
+.panel-sub { padding-top: 6px; border-top: 1px dashed transparent; }
+
+/* form actions */
+.form-actions { display:flex; gap:12px; margin-top: 8px; }
+.btn-primary, .btn-secondary{
+  padding:10px 18px;
+  border-radius:6px;
+  cursor:pointer;
+  border: none;
+  font-weight:700;
+}
+.btn-primary { background: #185c78; color:#fff; }
+.btn-secondary { background:#f0f6f9; color:#185c78; border:1px solid #185c78; }
+
+/* Right column (results) */
+.results-column { padding-left: 18px; }
+.page-title { font-size:40px; margin: 0 0 18px 0; font-weight:700; color:var(--text); }
+.notice {
+  background: #f2f2f2;
+  padding:12px;
+  border-left:4px solid #fff;
+  margin-bottom: 20px;
+}
+
+/* small helpers */
+.subheading { font-size:14px; margin:8px 0; font-weight:700; }
+.sr-only{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+/* Responsive: stack on small screens */
+@media (max-width: 880px){
+  .chymera-inner { grid-template-columns: 1fr; padding: 18px; }
+  .search-form-column { order: 0; width:100%; border-right:none; padding-right:0; padding-bottom: 18px; border-bottom:1px solid var(--panel-border); }
+  .results-column { order: 1; padding-left:0; margin-top:18px; }
+  .form-actions{ flex-direction:column; }
+  .btn-primary, .btn-secondary{ width:100%; }
+}
+
+/* Search Load label spacing */
+#searchLoadWrap .control-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Horizontal radio layout */
+.search-load-row {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+/* Individual radio styling */
+.search-load-row .radio-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+/* Slight alignment tweak for radios */
+.search-load-row input[type="radio"] {
+  margin: 0;
+}
+
+/* keep vertical-radio class for other vertical groups (do not change) */
+.vertical-radio label { display:block; margin-bottom:8px; font-weight:400; }

@@ -1,0 +1,2362 @@
+[2026-04-14 11:55:38] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 11:55:38] [cas9] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name, ', '),   ', ') > 0, 'TRUE', 'FALSE')                                                        AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY cas.guide_sequence, CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 11:56:00] [cas9] COUNT time: 22.492 s — result: 1380 rows
+[2026-04-14 11:56:00] [cas12] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT
+            'cas12'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name, ', '),   ', ') > 0, 'TRUE', 'FALSE')                                                        AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.on_target_score                   AS `On Target Score`,
+           cas.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           cas.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           cas.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           cas.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           cas.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           cas.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , on_target_score,
+               HydraNet_CDS_Lb_D156R_Cas12a, HydraNet_CDS_Lb_WT_Cas12a, HydraNet_CDS_As_opCas12a,
+               HydraNet_Seq_Lb_D156R_Cas12a, HydraNet_Seq_Lb_WT_Cas12a, HydraNet_Seq_As_opCas12a
+            FROM human_cas12
+            WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY cas.guide_sequence, CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 11:56:08] [cas12] COUNT time: 7.499 s — result: 488 rows
+[2026-04-14 11:56:08] [cas9] DATA SQL: SELECT base.* FROM (
+        SELECT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name, ', '),   ', ') > 0, 'TRUE', 'FALSE')                                                        AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY cas.guide_sequence, CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base ORDER BY base.`Cut Site` ASC LIMIT 50 OFFSET 0
+[2026-04-14 11:56:30] [cas9] DATA query time: 22.103 s
+[2026-04-14 11:56:30] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 11:56:30] JSON encode time: 0.000 s (size: 57.1 KB)
+[2026-04-14 11:56:30] Total request time: 52.095 s
+[2026-04-14 11:56:30] ------------------------------------------------------------
+[2026-04-14 12:02:30] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 12:02:30] [cas9] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT
+            'cas9'                        AS `Cas Type`,
+            t.guide_sequence                AS `Guide Sequence`,
+            CONCAT(t.seqnames, ':', t.guideseq_start, '-', t.guideseq_end) AS `Guide Coordinates`,
+            CONCAT(t.seqnames, ':', t.start, '-', t.end)                   AS `Cut Site`,
+            t.strand                        AS `Targeted Strand`,
+            t.pam_sequence                  AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT a.gene_name  SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT a.gene_id    SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT a.strand     SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT a.gene_type  SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT a.exon_id    SEPARATOR ', ') AS `Exon ID`,
+            MAX(CASE WHEN a.type = 'exon'                        THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap Exon`,
+            MAX(CASE WHEN a.type = 'gene' AND a.type != 'exon'  THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap Intron`,
+            MAX(CASE WHEN a.type LIKE '%UTR%'                    THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap UTR`,
+            MAX(CASE WHEN a.type = 'CDS'                         THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap CDS`,
+            IF(COUNT(DISTINCT a.gene_name) > 1, 'TRUE', 'FALSE')                               AS `Overlap 2nd Gene`,
+            t.h0 + t.h1 + t.h2 + t.h3      AS `Number Of Off-Targets`,
+            t.h0 AS Hamming_0, t.h1 AS Hamming_1, t.h2 AS Hamming_2, t.h3 AS Hamming_3,
+            t.specificity, t.classification
+            ,
+           t.RS3_seq                           AS `RS3 Seq`,
+           t.RS3_target                        AS `RS3 Target`,
+           t.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM human_cas9 t
+        INNER JOIN human_annot a
+            ON  a.seqnames = t.seqnames
+            AND a.start    <= t.end
+            AND a.end      >= t.start
+        WHERE 
+        t.seqnames = 'chr1'
+        AND (t.end BETWEEN 94530000 AND 94542000 OR t.start BETWEEN 94530000 AND 94542000)
+    
+        GROUP BY t.guide_sequence, t.start, t.end
+    ) base
+[2026-04-14 12:03:10] [cas9] COUNT time: 39.813 s — result: 1380 rows
+[2026-04-14 12:03:10] [cas12] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT
+            'cas12'                        AS `Cas Type`,
+            t.guide_sequence                AS `Guide Sequence`,
+            CONCAT(t.seqnames, ':', t.guideseq_start, '-', t.guideseq_end) AS `Guide Coordinates`,
+            CONCAT(t.seqnames, ':', t.start, '-', t.end)                   AS `Cut Site`,
+            t.strand                        AS `Targeted Strand`,
+            t.pam_sequence                  AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT a.gene_name  SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT a.gene_id    SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT a.strand     SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT a.gene_type  SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT a.exon_id    SEPARATOR ', ') AS `Exon ID`,
+            MAX(CASE WHEN a.type = 'exon'                        THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap Exon`,
+            MAX(CASE WHEN a.type = 'gene' AND a.type != 'exon'  THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap Intron`,
+            MAX(CASE WHEN a.type LIKE '%UTR%'                    THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap UTR`,
+            MAX(CASE WHEN a.type = 'CDS'                         THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap CDS`,
+            IF(COUNT(DISTINCT a.gene_name) > 1, 'TRUE', 'FALSE')                               AS `Overlap 2nd Gene`,
+            t.h0 + t.h1 + t.h2 + t.h3      AS `Number Of Off-Targets`,
+            t.h0 AS Hamming_0, t.h1 AS Hamming_1, t.h2 AS Hamming_2, t.h3 AS Hamming_3,
+            t.specificity, t.classification
+            ,
+           t.on_target_score                   AS `On Target Score`,
+           t.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           t.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           t.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           t.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           t.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           t.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM human_cas12 t
+        INNER JOIN human_annot a
+            ON  a.seqnames = t.seqnames
+            AND a.start    <= t.end
+            AND a.end      >= t.start
+        WHERE 
+        t.seqnames = 'chr1'
+        AND (t.end BETWEEN 94530000 AND 94542000 OR t.start BETWEEN 94530000 AND 94542000)
+    
+        GROUP BY t.guide_sequence, t.start, t.end
+    ) base
+[2026-04-14 12:03:22] [cas12] COUNT time: 11.954 s — result: 488 rows
+[2026-04-14 12:03:22] [cas9] DATA SQL: SELECT base.* FROM (
+        SELECT
+            'cas9'                        AS `Cas Type`,
+            t.guide_sequence                AS `Guide Sequence`,
+            CONCAT(t.seqnames, ':', t.guideseq_start, '-', t.guideseq_end) AS `Guide Coordinates`,
+            CONCAT(t.seqnames, ':', t.start, '-', t.end)                   AS `Cut Site`,
+            t.strand                        AS `Targeted Strand`,
+            t.pam_sequence                  AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT a.gene_name  SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT a.gene_id    SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT a.strand     SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT a.gene_type  SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT a.exon_id    SEPARATOR ', ') AS `Exon ID`,
+            MAX(CASE WHEN a.type = 'exon'                        THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap Exon`,
+            MAX(CASE WHEN a.type = 'gene' AND a.type != 'exon'  THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap Intron`,
+            MAX(CASE WHEN a.type LIKE '%UTR%'                    THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap UTR`,
+            MAX(CASE WHEN a.type = 'CDS'                         THEN 'TRUE' ELSE 'FALSE' END) AS `Overlap CDS`,
+            IF(COUNT(DISTINCT a.gene_name) > 1, 'TRUE', 'FALSE')                               AS `Overlap 2nd Gene`,
+            t.h0 + t.h1 + t.h2 + t.h3      AS `Number Of Off-Targets`,
+            t.h0 AS Hamming_0, t.h1 AS Hamming_1, t.h2 AS Hamming_2, t.h3 AS Hamming_3,
+            t.specificity, t.classification
+            ,
+           t.RS3_seq                           AS `RS3 Seq`,
+           t.RS3_target                        AS `RS3 Target`,
+           t.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM human_cas9 t
+        INNER JOIN human_annot a
+            ON  a.seqnames = t.seqnames
+            AND a.start    <= t.end
+            AND a.end      >= t.start
+        WHERE 
+        t.seqnames = 'chr1'
+        AND (t.end BETWEEN 94530000 AND 94542000 OR t.start BETWEEN 94530000 AND 94542000)
+    
+        GROUP BY t.guide_sequence, t.start, t.end
+    ) base ORDER BY base.`Cut Site` ASC LIMIT 50 OFFSET 0
+[2026-04-14 12:03:55] [cas9] DATA query time: 33.204 s
+[2026-04-14 12:03:55] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 12:03:55] JSON encode time: 0.000 s (size: 57.1 KB)
+[2026-04-14 12:03:55] Total request time: 84.972 s
+[2026-04-14 12:03:55] ------------------------------------------------------------
+[2026-04-14 12:11:34] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 12:11:34] [cas9] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 12:11:55] [cas9] COUNT time: 21.083 s — result: 1344 rows
+[2026-04-14 12:11:55] [cas12] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT DISTINCT
+            'cas12'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.on_target_score                   AS `On Target Score`,
+           cas.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           cas.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           cas.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           cas.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           cas.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           cas.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , on_target_score,
+               HydraNet_CDS_Lb_D156R_Cas12a, HydraNet_CDS_Lb_WT_Cas12a, HydraNet_CDS_As_opCas12a,
+               HydraNet_Seq_Lb_D156R_Cas12a, HydraNet_Seq_Lb_WT_Cas12a, HydraNet_Seq_As_opCas12a
+            FROM human_cas12
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 12:12:02] [cas12] COUNT time: 7.114 s — result: 482 rows
+[2026-04-14 12:12:02] [cas9] DATA SQL: SELECT base.* FROM (
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base ORDER BY base.`Cut Site` ASC LIMIT 50 OFFSET 0
+[2026-04-14 12:12:23] [cas9] DATA query time: 20.897 s
+[2026-04-14 12:12:23] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 12:12:23] JSON encode time: 0.000 s (size: 57.2 KB)
+[2026-04-14 12:12:23] Total request time: 49.096 s
+[2026-04-14 12:12:23] ------------------------------------------------------------
+[2026-04-14 12:15:30] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 12:15:30] [cas9] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 12:15:51] [cas9] COUNT time: 21.025 s — result: 1344 rows
+[2026-04-14 12:15:51] [cas12] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT DISTINCT
+            'cas12'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.on_target_score                   AS `On Target Score`,
+           cas.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           cas.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           cas.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           cas.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           cas.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           cas.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , on_target_score,
+               HydraNet_CDS_Lb_D156R_Cas12a, HydraNet_CDS_Lb_WT_Cas12a, HydraNet_CDS_As_opCas12a,
+               HydraNet_Seq_Lb_D156R_Cas12a, HydraNet_Seq_Lb_WT_Cas12a, HydraNet_Seq_As_opCas12a
+            FROM human_cas12
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 12:15:58] [cas12] COUNT time: 7.015 s — result: 482 rows
+[2026-04-14 12:15:58] [cas9] DATA SQL: SELECT base.* FROM (
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base ORDER BY base.`Cut Site` ASC LIMIT 50 OFFSET 0
+[2026-04-14 12:16:19] [cas9] DATA query time: 20.976 s
+[2026-04-14 12:16:19] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 12:16:19] JSON encode time: 0.000 s (size: 57.2 KB)
+[2026-04-14 12:16:19] Total request time: 49.017 s
+[2026-04-14 12:16:19] ------------------------------------------------------------
+[2026-04-14 12:21:11] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 12:21:11] [cas9] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 12:21:32] [cas9] COUNT time: 21.025 s — result: 1344 rows
+[2026-04-14 12:21:32] [cas12] COUNT SQL: SELECT COUNT(*) AS cnt FROM (
+        SELECT DISTINCT
+            'cas12'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.on_target_score                   AS `On Target Score`,
+           cas.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           cas.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           cas.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           cas.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           cas.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           cas.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , on_target_score,
+               HydraNet_CDS_Lb_D156R_Cas12a, HydraNet_CDS_Lb_WT_Cas12a, HydraNet_CDS_As_opCas12a,
+               HydraNet_Seq_Lb_D156R_Cas12a, HydraNet_Seq_Lb_WT_Cas12a, HydraNet_Seq_As_opCas12a
+            FROM human_cas12
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base
+[2026-04-14 12:21:39] [cas12] COUNT time: 7.048 s — result: 482 rows
+[2026-04-14 12:21:39] [cas9] DATA SQL: SELECT base.* FROM (
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base ORDER BY base.`Cut Site` ASC LIMIT 50 OFFSET 0
+[2026-04-14 12:22:00] [cas9] DATA query time: 20.891 s
+[2026-04-14 12:22:00] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 12:22:00] JSON encode time: 0.000 s (size: 57.2 KB)
+[2026-04-14 12:22:00] Total request time: 48.965 s
+[2026-04-14 12:22:00] ------------------------------------------------------------
+[2026-04-14 12:38:21] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 12:38:21] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 12:38:21] [cas9] COUNT time: 0.112 s — result: 1344 rows
+[2026-04-14 12:38:21] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 12:38:21] [cas12] COUNT time: 0.102 s — result: 482 rows
+[2026-04-14 12:38:21] [cas9] DATA SQL: SELECT base.* FROM (
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+    ) base ORDER BY base.`Cut Site` ASC LIMIT 50 OFFSET 0
+[2026-04-14 12:38:42] [cas9] DATA query time: 20.986 s
+[2026-04-14 12:38:42] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 12:38:42] JSON encode time: 0.000 s (size: 57.2 KB)
+[2026-04-14 12:38:42] Total request time: 21.200 s
+[2026-04-14 12:38:42] ------------------------------------------------------------
+[2026-04-14 14:13:02] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:13:02] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:13:02] [cas9] COUNT time: 0.120 s — result: 1344 rows
+[2026-04-14 14:13:02] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:13:02] [cas12] COUNT time: 0.166 s — result: 482 rows
+[2026-04-14 14:13:02] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:13:03] [cas9] DATA query time: 0.788 s
+[2026-04-14 14:13:03] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:13:03] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:13:03] Total request time: 1.075 s
+[2026-04-14 14:13:03] ------------------------------------------------------------
+[2026-04-14 14:13:09] Request started — region: chr1:94530000-94542000 | group: 'cas12' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:13:09] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:13:09] [cas9] COUNT time: 0.112 s — result: 1344 rows
+[2026-04-14 14:13:09] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:13:09] [cas12] COUNT time: 0.104 s — result: 482 rows
+[2026-04-14 14:13:09] [cas12] DATA SQL: 
+        SELECT DISTINCT
+            'cas12'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.on_target_score                   AS `On Target Score`,
+           cas.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           cas.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           cas.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           cas.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           cas.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           cas.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , on_target_score,
+               HydraNet_CDS_Lb_D156R_Cas12a, HydraNet_CDS_Lb_WT_Cas12a, HydraNet_CDS_As_opCas12a,
+               HydraNet_Seq_Lb_D156R_Cas12a, HydraNet_Seq_Lb_WT_Cas12a, HydraNet_Seq_As_opCas12a
+            FROM human_cas12
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:13:10] [cas12] DATA query time: 0.755 s
+[2026-04-14 14:13:10] [cas12] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:13:10] JSON encode time: 0.000 s (size: 64.2 KB)
+[2026-04-14 14:13:10] Total request time: 0.971 s
+[2026-04-14 14:13:10] ------------------------------------------------------------
+[2026-04-14 14:13:42] Request started — region: chr1:94530000-94542000 | group: 'cas9' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:13:42] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:13:42] [cas9] COUNT time: 0.110 s — result: 1344 rows
+[2026-04-14 14:13:42] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:13:42] [cas12] COUNT time: 0.105 s — result: 482 rows
+[2026-04-14 14:13:42] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:13:43] [cas9] DATA query time: 0.763 s
+[2026-04-14 14:13:43] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:13:43] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:13:43] Total request time: 0.978 s
+[2026-04-14 14:13:43] ------------------------------------------------------------
+[2026-04-14 14:23:01] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:23:01] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:23:01] [cas9] COUNT time: 0.119 s — result: 1344 rows
+[2026-04-14 14:23:01] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:23:01] [cas12] COUNT time: 0.102 s — result: 482 rows
+[2026-04-14 14:23:01] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:23:02] [cas9] DATA query time: 0.764 s
+[2026-04-14 14:23:02] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:23:02] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:23:02] Total request time: 0.986 s
+[2026-04-14 14:23:02] ------------------------------------------------------------
+[2026-04-14 14:29:20] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:29:20] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:29:20] [cas9] COUNT time: 0.169 s — result: 1344 rows
+[2026-04-14 14:29:20] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:29:20] [cas12] COUNT time: 0.103 s — result: 482 rows
+[2026-04-14 14:29:20] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:29:21] [cas9] DATA query time: 0.767 s
+[2026-04-14 14:29:21] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:29:21] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:29:21] Total request time: 1.040 s
+[2026-04-14 14:29:21] ------------------------------------------------------------
+[2026-04-14 14:31:38] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:31:38] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:31:38] [cas9] COUNT time: 0.110 s — result: 1344 rows
+[2026-04-14 14:31:38] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:31:38] [cas12] COUNT time: 0.103 s — result: 482 rows
+[2026-04-14 14:31:38] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:31:39] [cas9] DATA query time: 0.767 s
+[2026-04-14 14:31:39] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:31:39] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:31:39] Total request time: 0.981 s
+[2026-04-14 14:31:39] ------------------------------------------------------------
+[2026-04-14 14:33:40] Request started — region: chr1:94530000-94542000 | group: 'cas12' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:33:40] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:33:40] [cas9] COUNT time: 0.138 s — result: 1344 rows
+[2026-04-14 14:33:40] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:33:40] [cas12] COUNT time: 0.105 s — result: 482 rows
+[2026-04-14 14:33:40] [cas12] DATA SQL: 
+        SELECT DISTINCT
+            'cas12'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.on_target_score                   AS `On Target Score`,
+           cas.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           cas.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           cas.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           cas.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           cas.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           cas.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , on_target_score,
+               HydraNet_CDS_Lb_D156R_Cas12a, HydraNet_CDS_Lb_WT_Cas12a, HydraNet_CDS_As_opCas12a,
+               HydraNet_Seq_Lb_D156R_Cas12a, HydraNet_Seq_Lb_WT_Cas12a, HydraNet_Seq_As_opCas12a
+            FROM human_cas12
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:33:41] [cas12] DATA query time: 0.767 s
+[2026-04-14 14:33:41] [cas12] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:33:41] JSON encode time: 0.000 s (size: 64.2 KB)
+[2026-04-14 14:33:41] Total request time: 1.011 s
+[2026-04-14 14:33:41] ------------------------------------------------------------
+[2026-04-14 14:33:42] Request started — region: chr1:94530000-94542000 | group: 'cas9' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:33:42] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:33:42] [cas9] COUNT time: 0.139 s — result: 1344 rows
+[2026-04-14 14:33:42] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:33:42] [cas12] COUNT time: 0.104 s — result: 482 rows
+[2026-04-14 14:33:42] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:33:43] [cas9] DATA query time: 0.788 s
+[2026-04-14 14:33:43] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:33:43] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:33:43] Total request time: 1.032 s
+[2026-04-14 14:33:43] ------------------------------------------------------------
+[2026-04-14 14:39:46] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:39:46] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:39:46] [cas9] COUNT time: 0.111 s — result: 1344 rows
+[2026-04-14 14:39:46] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:39:46] [cas12] COUNT time: 0.105 s — result: 482 rows
+[2026-04-14 14:39:46] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:39:47] [cas9] DATA query time: 0.812 s
+[2026-04-14 14:39:47] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:39:47] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:39:47] Total request time: 1.030 s
+[2026-04-14 14:39:47] ------------------------------------------------------------
+[2026-04-14 14:48:29] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 14:48:29] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:48:29] [cas9] COUNT time: 0.110 s — result: 1344 rows
+[2026-04-14 14:48:29] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 14:48:29] [cas12] COUNT time: 0.103 s — result: 482 rows
+[2026-04-14 14:48:29] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 14:48:30] [cas9] DATA query time: 0.840 s
+[2026-04-14 14:48:30] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 14:48:30] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 14:48:30] Total request time: 1.054 s
+[2026-04-14 14:48:30] ------------------------------------------------------------
+[2026-04-14 15:00:58] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 15:00:58] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:00:58] [cas9] COUNT time: 0.134 s — result: 1344 rows
+[2026-04-14 15:00:58] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:00:58] [cas12] COUNT time: 0.116 s — result: 482 rows
+[2026-04-14 15:00:58] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 15:00:59] [cas9] DATA query time: 0.776 s
+[2026-04-14 15:00:59] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 15:00:59] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 15:00:59] Total request time: 1.027 s
+[2026-04-14 15:00:59] ------------------------------------------------------------
+[2026-04-14 15:01:04] Request started — region: chr1:94530000-94542000 | group: 'cas12' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 15:01:04] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:01:04] [cas9] COUNT time: 0.113 s — result: 1344 rows
+[2026-04-14 15:01:04] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:01:04] [cas12] COUNT time: 0.105 s — result: 482 rows
+[2026-04-14 15:01:04] [cas12] DATA SQL: 
+        SELECT DISTINCT
+            'cas12'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.on_target_score                   AS `On Target Score`,
+           cas.HydraNet_CDS_Lb_D156R_Cas12a      AS `HydraNet CDS Lb.D156R`,
+           cas.HydraNet_CDS_Lb_WT_Cas12a         AS `HydraNet CDS Lb.WT`,
+           cas.HydraNet_CDS_As_opCas12a          AS `HydraNet CDS As.op`,
+           cas.HydraNet_Seq_Lb_D156R_Cas12a      AS `HydraNet Seq Lb.D156R`,
+           cas.HydraNet_Seq_Lb_WT_Cas12a         AS `HydraNet Seq Lb.WT`,
+           cas.HydraNet_Seq_As_opCas12a          AS `HydraNet Seq As.op`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , on_target_score,
+               HydraNet_CDS_Lb_D156R_Cas12a, HydraNet_CDS_Lb_WT_Cas12a, HydraNet_CDS_As_opCas12a,
+               HydraNet_Seq_Lb_D156R_Cas12a, HydraNet_Seq_Lb_WT_Cas12a, HydraNet_Seq_As_opCas12a
+            FROM human_cas12
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 15:01:05] [cas12] DATA query time: 0.772 s
+[2026-04-14 15:01:05] [cas12] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 15:01:05] JSON encode time: 0.000 s (size: 64.2 KB)
+[2026-04-14 15:01:05] Total request time: 0.991 s
+[2026-04-14 15:01:05] ------------------------------------------------------------
+[2026-04-14 15:01:06] Request started — region: chr1:94530000-94542000 | group: 'cas9' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 15:01:06] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:01:06] [cas9] COUNT time: 0.121 s — result: 1344 rows
+[2026-04-14 15:01:06] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:01:06] [cas12] COUNT time: 0.103 s — result: 482 rows
+[2026-04-14 15:01:06] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 15:01:07] [cas9] DATA query time: 0.821 s
+[2026-04-14 15:01:07] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 15:01:07] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 15:01:07] Total request time: 1.046 s
+[2026-04-14 15:01:07] ------------------------------------------------------------
+[2026-04-14 15:06:51] Request started — region: chr1:94530000-94542000 | group: '' | search: '' | sort: Cut Site asc | page: 1 | rpp: 50
+[2026-04-14 15:06:51] [cas9] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas9
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:06:51] [cas9] COUNT time: 0.112 s — result: 1344 rows
+[2026-04-14 15:06:51] [cas12] COUNT SQL: 
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT DISTINCT cas.seqnames, cas.start, cas.end
+            FROM (
+                SELECT seqnames, start, end
+                FROM human_cas12
+                WHERE 
+        seqnames = 'chr1'
+        AND (end BETWEEN 94530000 AND 94542000 OR start BETWEEN 94530000 AND 94542000)
+    
+                LIMIT 1000000
+            ) cas
+            JOIN human_annot ens
+                ON cas.start >= ens.start
+                AND cas.end  <= ens.end
+            WHERE 
+        (ens.seqnames = 'chr1' AND ens.start <= 94530000 AND ens.end >= 94530000)
+        OR (ens.seqnames = 'chr1' AND ens.start <= 94542000   AND ens.end >= 94542000)
+        OR (ens.seqnames = 'chr1' AND ens.start >= 94530000 AND ens.end <= 94542000)
+    
+        ) t
+    
+[2026-04-14 15:06:52] [cas12] COUNT time: 0.104 s — result: 482 rows
+[2026-04-14 15:06:52] [cas9] DATA SQL: 
+        SELECT DISTINCT
+            'cas9'              AS `Cas Type`,
+            cas.guide_sequence    AS `Guide Sequence`,
+            CONCAT(cas.seqnames, ':', guideseq_start, '-', guideseq_end) AS `Guide Coordinates`,
+            CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)           AS `Cut Site`,
+            cas.strand            AS `Targeted Strand`,
+            pam_sequence          AS `PAM Sequence`,
+            GROUP_CONCAT(DISTINCT gene_name     SEPARATOR ', ') AS `Gene Name`,
+            GROUP_CONCAT(DISTINCT gene_id       SEPARATOR ', ') AS `Gene ID`,
+            GROUP_CONCAT(DISTINCT ens.strand    SEPARATOR ', ') AS `Gene Strand`,
+            GROUP_CONCAT(DISTINCT ens.gene_type SEPARATOR ', ') AS `Target Category`,
+            GROUP_CONCAT(DISTINCT ens.exon_id   SEPARATOR ', ') AS `Exon ID`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') > 0, 'TRUE', 'FALSE')                                                               AS `Overlap Exon`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'exon') = 0 AND INSTR(GROUP_CONCAT(DISTINCT ens.type), 'gene') > 0, 'TRUE', 'FALSE')        AS `Overlap Intron`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'UTR')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap UTR`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT ens.type), 'CDS')  > 0, 'TRUE', 'FALSE')                                                               AS `Overlap CDS`,
+            IF(INSTR(GROUP_CONCAT(DISTINCT gene_name SEPARATOR ', '), ', ') > 0, 'TRUE', 'FALSE')                                                  AS `Overlap 2nd Gene`,
+            h0 + h1 + h2 + h3     AS `Number Of Off-Targets`,
+            h0 AS Hamming_0, h1 AS Hamming_1, h2 AS Hamming_2, h3 AS Hamming_3,
+            specificity, classification
+            ,
+           cas.RS3_seq                           AS `RS3 Seq`,
+           cas.RS3_target                        AS `RS3 Target`,
+           cas.RS3_seq_target                    AS `RS3 Seq Target`
+        FROM (
+            SELECT guide_sequence, guideseq_start, guideseq_end,
+                   seqnames, start, end, strand, pam_sequence,
+                   h0, h1, h2, h3, specificity, classification
+                   , RS3_seq, RS3_target, RS3_seq_target
+            FROM human_cas9
+            WHERE 
+        (seqnames = 'chr1' AND end BETWEEN 94530000 AND 94542000)
+        OR (seqnames = 'chr1' AND start BETWEEN 94530000 AND 94542000)
+    
+            LIMIT 1000000
+        ) cas,
+        (
+            SELECT seqnames, start, end, strand, type, gene_id, gene_type, gene_name, exon_id
+            FROM human_annot
+            WHERE 
+        (seqnames = 'chr1' AND start <= 94530000 AND end >= 94530000)
+        OR (seqnames = 'chr1' AND start <= 94542000   AND end >= 94542000)
+        OR (seqnames = 'chr1' AND start >= 94530000 AND end <= 94542000)
+    
+        ) ens
+        WHERE cas.start >= ens.start AND cas.end <= ens.end
+        GROUP BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end)
+        ORDER BY CONCAT(cas.seqnames, ':', cas.start, '-', cas.end) ASC
+        LIMIT 0, 50
+    
+[2026-04-14 15:06:52] [cas9] DATA query time: 0.766 s
+[2026-04-14 15:06:52] [cas9] fetch_all() time: 0.000 s (50 rows fetched)
+[2026-04-14 15:06:52] JSON encode time: 0.000 s (size: 57.0 KB)
+[2026-04-14 15:06:52] Total request time: 0.983 s
+[2026-04-14 15:06:52] ------------------------------------------------------------

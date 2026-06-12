@@ -1,0 +1,28 @@
+[2026-04-14 14:39:51] Export started — region: chr1:94530000-94542000 | search: '' | sort: Cut Site asc
+[2026-04-14 14:40:14] [cas9] Query time: 22.993 s
+[2026-04-14 14:40:14] [cas9] Row writing time: 0.023 s (1344 rows)
+[2026-04-14 14:40:22] [cas12] Query time: 7.317 s
+[2026-04-14 14:40:22] [cas12] Row writing time: 0.010 s (482 rows)
+[2026-04-14 14:40:22] XLSX serialization time: 0.235 s
+[2026-04-14 14:40:22] Total export time: 30.579 s
+[2026-04-14 14:40:22] ------------------------------------------------------------
+[2026-04-14 14:48:35] Export started — region: chr1:94530000-94542000 | search: '' | sort: Cut Site asc
+[2026-04-14 14:48:35] [cas9] Coord fetch time: 0.163 s (1344 coords)
+[2026-04-14 14:50:15] [cas9] Data query time: 99.287 s
+[2026-04-14 14:50:15] [cas9] Row writing time: 0.051 s (3179 rows)
+[2026-04-14 14:50:15] [cas12] Coord fetch time: 0.125 s (482 coords)
+[2026-04-14 14:50:42] [cas12] Data query time: 27.251 s
+[2026-04-14 14:50:42] [cas12] Row writing time: 0.015 s (825 rows)
+[2026-04-14 14:50:42] XLSX serialization time: 0.459 s
+[2026-04-14 14:50:42] Total export time: 127.352 s
+[2026-04-14 14:50:42] ------------------------------------------------------------
+[2026-04-14 14:54:48] Export started — region: chr1:94530000-94542000 | search: '' | sort: Cut Site asc
+[2026-04-14 14:54:48] [cas9] Coord fetch time: 0.165 s (1344 coords)
+[2026-04-14 14:56:19] [cas9] Data query time: 91.464 s
+[2026-04-14 14:56:19] [cas9] Row writing time: 0.052 s (3179 rows)
+[2026-04-14 14:56:19] [cas12] Coord fetch time: 0.123 s (482 coords)
+[2026-04-14 14:56:43] [cas12] Data query time: 23.879 s
+[2026-04-14 14:56:43] [cas12] Row writing time: 0.015 s (825 rows)
+[2026-04-14 14:56:44] XLSX serialization time: 0.532 s
+[2026-04-14 14:56:44] Total export time: 116.232 s
+[2026-04-14 14:56:44] ------------------------------------------------------------
