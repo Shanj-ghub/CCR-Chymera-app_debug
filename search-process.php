@@ -239,10 +239,10 @@ function build_result_query(
         SELECT seqnames, start, end, strand, type, gene_id, gene_type, 
                 gene_name, exon_id, transcript_id, exon_number, transcript_count
             FROM human_annot
-            WHERE $annot_where
+            WHERE $annot_where and gene_type = 'protein_coding'
         ) ens
         ON cas.start >= ens.start AND cas.end <= ens.end
-        GROUP BY cas.seqnames, cas.start, cas.end, cas.strand
+        GROUP BY cas.seqnames, cas.start, cas.end, cas.strand, ens.gene_name
         ORDER BY $se
     ";
 }
@@ -593,7 +593,7 @@ function build_knockout_chr_query(
             SELECT seqnames, start, end, strand, type, gene_id, gene_type,
                    gene_name, exon_id, transcript_id, exon_number, transcript_count
             FROM human_annot
-            WHERE $annot_where
+            WHERE $annot_where and gene_type = 'protein_coding'
         ) ens ON cas.start >= ens.start AND cas.end <= ens.end
         GROUP BY cas.seqnames, cas.start, cas.end, cas.strand
         ORDER BY $se
