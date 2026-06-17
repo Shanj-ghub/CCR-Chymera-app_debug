@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="2d22b120-5584-48bc-b939-5aa6905d27c3" name="fsabcl-redas01d" url="https://fsabcl-redas01d.ncifcrf.gov">
+        <fileTransfer rootFolder="/var/www/html" accessType="SFTP" host="fsabcl-redas01d" port="22" sshConfigId="8261fd2a-98b9-4a3f-8778-f36af1b6f038" sshConfig="ncif-www-abcs-svc@fsabcl-redas01d:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
